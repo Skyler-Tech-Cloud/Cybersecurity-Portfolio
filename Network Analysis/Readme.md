@@ -1,76 +1,83 @@
-Summary of tcpdump Log Analysis
-The tcpdump log shows repeated attempts by the client computer (192.51.100.15) to query a DNS server (203.0.113.2) for the domain yummyrecipesforme.com. These DNS queries were sent using the UDP protocol on port 53, which is the standard port for DNS resolution.
+1. Executive Summary
+A tcpdump capture revealed repeated DNS resolution failures when the client system (192.51.100.15) attempted to query the DNS server (203.0.113.2) for the domain yummyrecipesforme.com.
+Each DNS query resulted in an ICMP “udp port 53 unreachable” response, indicating that the DNS service on the server was unavailable, blocked, or misconfigured.
+As a result, the website could not be accessed because DNS resolution could not complete.
 
-Each DNS request resulted in an ICMP error message, specifically:
+2. Protocols Identified
+UDP — Transport protocol used for DNS queries on port 53
 
-“udp port 53 unreachable”
+ICMP — Returned error messages indicating the port was unreachable
 
-This indicates that the DNS server was not accepting UDP traffic on port 53, meaning the DNS service was unavailable or misconfigured.
+DNS — The service attempting to resolve the domain name
 
-Protocols Identified
-UDP — used for the outgoing DNS queries
+3. Key Observations from the tcpdump Log
+The client repeatedly sent DNS A‑record queries for yummyrecipesforme.com
 
-ICMP — used for the error responses
+Each query received an ICMP “destination port unreachable” response
 
-DNS — the service attempting to resolve the domain name
+No successful DNS responses were observed
 
-The client repeatedly sends DNS A‑record queries for yummyrecipesforme.com
+Failures occurred consistently over several minutes
 
-Each query receives an ICMP “destination port unreachable” response
+The pattern confirms a service‑level issue, not a client‑side misconfiguration
 
-The timestamps show multiple failed attempts over several minutes
-
-No successful DNS response is ever returned
-
-The DNS server is not responding to UDP port 53, which prevents the client from resolving the domain name. Because DNS resolution fails, the browser cannot obtain the IP address for the website, resulting in the website appearing offline.
-
-This means the network protocol impacted is:
-
+4. Impacted Network Service
 UDP DNS service on port 53
-When the Problem Was First Reported
-Customers reported being unable to access www.yummyrecipesforme.com and receiving a “destination port unreachable” error.
 
-Scenario, Events, and Symptoms
-Users attempted to load the website
+Because the DNS server was not responding on this port, the client could not resolve the domain name, preventing access to the website.
 
-DNS resolution failed
+5. Incident Timeline
+When the Issue Was Reported
+Users reported being unable to access www.yummyrecipesforme.com and receiving a “destination port unreachable” error.
 
-The browser could not retrieve the IP address
+Observed Symptoms
+Website failed to load
 
-The tcpdump log confirmed repeated DNS failures
+DNS resolution attempts timed out
+
+Browser could not retrieve the IP address
+
+tcpdump logs confirmed repeated DNS failures
 
 ICMP errors indicated the DNS server was unreachable on port 53
 
-Current Status of the Issue
-
+6. Current Status
 The DNS server is not responding to DNS queries.
-The website cannot load because DNS resolution cannot complete.
+The website remains inaccessible due to unresolved DNS lookups.
 
-Information Discovered During Investigation
+7. Findings
+Client DNS queries were sent correctly
 
-DNS queries are sent correctly from the client
+The DNS server returned ICMP errors
 
-The DNS server responds with ICMP errors
+The error explicitly states UDP port 53 is unreachable
 
-The error specifically states UDP port 53 is unreachable
+This confirms the DNS service is either:
 
-This confirms the DNS service is down, blocked, or misconfigured
+Down
 
-Next Steps for Troubleshooting
+Blocked by a firewall
 
-Verify whether the DNS service on the server is running
+Misconfigured
 
-Check firewall rules blocking UDP port 53
+Not listening on the correct interface
 
-Restart DNS service (e.g., BIND, Windows DNS)
+8. Recommended Next Steps
+Verify that the DNS service (e.g., BIND, Windows DNS) is running
 
-Validate DNS server configuration
+Check firewall rules for UDP port 53
+
+Restart the DNS service
+
+Validate DNS configuration files
 
 Test DNS resolution from another network to rule out routing issues
 
-Suspected Root Cause
+Review recent changes or patches that may have impacted DNS
+
+9. Suspected Root Cause
 The most likely cause is:
 
 The DNS server is not listening on UDP port 53 due to a service outage, firewall block, or misconfiguration.
 
-Because DNS is down, the website cannot be resolved, causing the “destination port unreachable” error.
+This prevents DNS resolution, resulting in the “destination port unreachable” error and causing the website to appear offline.
